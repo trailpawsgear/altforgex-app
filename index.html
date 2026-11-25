@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AltForgeX — Bulk AI Alt Text Generator for Product Photos</title>
+<meta name="description" content="Upload product photos in bulk and get accessibility-ready, SEO-friendly ALT text generated instantly with AI. Export as CSV for Shopify, Etsy, WooCommerce and more." />
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg-elevated: #171a23;
+    --card: #1b1e29;
+    --border: #2a2e3b;
+    --text: #f2f3f7;
+          --text-muted: #9ba0b3;
+    --accent: #7c5cff;
+    --accent-2: #ff6fae;
+          --accent-grad: linear-gradient(135deg, #7c5cff 0%, #ff6fae 100%);
+          --success: #35d08f;
+    --error: #ff6b6b;
+          --radius: 14px;
+}
+  * { box-sizing: border-box; }
+  html, body {
+        margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+}
+  a { color: inherit; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+  header.site {
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  header.site .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; }
+  .brand-mark {
+        width: 34px; height: 34px; border-radius: 9px;
+    background: var(--accent-grad);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 800;
+}
+  nav.site-nav a {
+        text-decoration: none; color: var(--text-muted); font-size: 0.92rem; margin-left: 26px;
+}
+  nav.site-nav a:hover { color: var(--text); }
+
+  .hero {
+    padding: 72px 0 48px;
+    text-align: center;
+  }
+  .hero .eyebrow {
+    display: inline-block;
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent-2);
+    background: rgba(255,111,174,0.1);
+    border: 1px solid rgba(255,111,174,0.3);
+    padding: 6px 14px; border-radius: 100px;
+    margin-bottom: 22px;
+  }
+  .hero h1 {
+        font-size: clamp(2rem, 5vw, 3.1rem);
+    line-height: 1.12;
+    margin: 0 0 18px;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 span {
+        background: var(--accent-grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+  .hero p.lead {
+    max-width: 620px;
+    margin: 0 auto 34px;
+    color: var(--text-muted);
+    font-size: 1.08rem;
+  }
+  .hero-stats {
+        display: flex; justify-content: center; gap: 36px; flex-wrap: wrap; margin-top: 8px;
+    color: var(--text-muted); font-size: 0.86rem;
+}
+  .hero-stats b { color: var(--text); font-size: 1.05rem; display: block; }
+
+  main { padding: 10px 0 70px; }
+
+  .panel {
+        background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px;
+    margin-bottom: 26px;
+}
+
+  .field { margin-bottom: 18px; }
+  .field label {
+        display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .field input[type="text"] {
+        width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 0.95rem;
+    outline: none;
+  }
+  .field input[type="text"]:focus { border-color: var(--accent); }
+  .field .hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; }
+
+  .dropzone {
+        border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    background: var(--bg-elevated);
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: rgba(124,92,255,0.06);
+  }
+  .dropzone .dz-icon { font-size: 2rem; margin-bottom: 10px; }
+  .dropzone .dz-title { font-weight: 600; margin-bottom: 4px; }
+  .dropzone .dz-sub { font-size: 0.82rem; color: var(--text-muted); }
+  .dropzone input[type="file"] { display: none; }
+
+  #fileList {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 10px;
+    }
+  .thumb {
+        position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .remove {
+    position: absolute; top: 4px; right: 4px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(0,0,0,0.6); color: #fff;
+        border: none; cursor: pointer; font-size: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .actions-row { display: flex; align-items: center; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
+
+  button.primary {
+    background: var(--accent-grad);
+    color: #fff; border: none;
+        font-weight: 700; font-size: 0.95rem;
+    padding: 13px 26px; border-radius: 10px;
+    cursor: pointer;
+    transition: transform .1s, opacity .15s;
+  }
+  button.primary:hover { transform: translateY(-1px); }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  button.secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-weight: 600; font-size: 0.9rem;
+    padding: 12px 20px; border-radius: 10px;
+    cursor: pointer;
+  }
+  button.secondary:hover { border-color: var(--accent); }
+  button.secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  #status { font-size: 0.86rem; color: var(--text-muted); }
+
+  #results { margin-top: 10px; }
+  .result-row {
+        display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+}
+  .result-row:last-child { border-bottom: none; }
+  .result-row img {
+        width: 64px; height: 64px; border-radius: 8px; object-fit: cover;
+    background: var(--bg-elevated); border: 1px solid var(--border);
+}
+  .result-text .fname { font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px; word-break: break-all; }
+  .result-text .alt-value {
+        font-size: 0.92rem;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    width: 100%;
+    resize: vertical;
+    font-family: inherit;
+    padding: 0;
+}
+  .result-text .alt-error { color: var(--error); font-size: 0.86rem; }
+  .copy-btn {
+        background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--success); border-color: var(--success); }
+
+  .steps {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 50px 0;
+  }
+  .step { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+  .step .num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent-grad); color: #fff; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px; font-size: 0.9rem;
+  }
+  .step h3 { margin: 0 0 8px; font-size: 1.02rem; }
+  .step p { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
+
+  footer.site {
+    border-top: 1px solid var(--border);
+    padding: 28px 0;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    text-align: center;
+  }
+
+  @media (max-width: 680px) {
+    .steps { grid-template-columns: 1fr; }
+    .result-row { grid-template-columns: 48px 1fr; }
+    .result-row .copy-btn { grid-column: 1 / -1; }
+}
+</style>
+      </head>
+      <body>
+
+      <header class="site">
+        <div class="wrap">
+          <div class="brand">
+            <span class="brand-mark">A</span>
+            AltForgeX
+          </div>
+          <nav class="site-nav">
+            <a href="#how-it-works">How it works</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">AI-powered · No sign-up</span>
+          <h1>Bulk ALT text for <span>every product photo</span>, in seconds</h1>
+          <p class="lead">
+            Upload your product images, get accurate, SEO-friendly, accessibility-ready ALT text for each one — written by AI, ready to paste into Shopify, Etsy, WooCommerce or any CMS. No more blank ALT tags.
+          </p>
+          <div class="hero-stats">
+            <div><b>20</b>images per batch</div>
+      <div><b>&lt;10s</b>per image</div>
+            <div><b>CSV</b>bulk export</div>
+          </div>
+        </div>
+      </section>
+
+      <main>
+        <div class="wrap">
+
+          <div class="panel">
+            <div class="field">
+              <label for="contextInput">Store / product context <span style="font-weight:400;color:var(--text-muted);">(optional, improves accuracy)</span></label>
+        <input type="text" id="contextInput" placeholder="e.g. handmade ceramic mugs, Etsy shop" />
+              <div class="hint">A short description of what you sell helps the AI use the right words.</div>
+      </div>
+
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept="image/*" multiple />
+              <div class="dz-icon">📷</div>
+              <div class="dz-title">Click to upload or drag & drop images</div>
+              <div class="dz-sub">PNG, JPG or WEBP — up to 20 images, 8MB each</div>
+            </div>
+
+            <div id="fileList"></div>
+
+            <div class="actions-row">
+              <button class="primary" id="generateBtn" disabled>Generate ALT text</button>
+              <button class="secondary" id="clearBtn" disabled>Clear all</button>
+              <span id="status"></span>
+            </div>
+          </div>
+
+          <div class="panel" id="resultsPanel" style="display:none;">
+            <div class="actions-row" style="margin-top:0; margin-bottom: 8px; justify-content: space-between;">
+              <strong>Results</strong>
+              <button class="secondary" id="downloadCsvBtn">⬇ Download CSV</button>
+            </div>
+            <div id="results"></div>
+          </div>
+
+          <div class="steps" id="how-it-works">
+            <div class="step">
+              <div class="num">1</div>
+              <h3>Upload your photos</h3>
+        <p>Drag in up to 20 product images at once — no account, no limits on image count per session.</p>
+      </div>
+      <div class="step">
+              <div class="num">2</div>
+              <h3>AI writes the ALT text</h3>
+        <p>A vision model looks at each image and writes a concise, descriptive, SEO-friendly ALT attribute.</p>
+            </div>
+            <div class="step">
+              <div class="num">3</div>
+              <h3>Copy or export</h3>
+              <p>Copy each line individually, or download a CSV with filename → ALT text pairs for bulk re-upload.</p>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <footer class="site">
+        <div class="wrap">AltForgeX — bulk AI alt text for product photography.</div>
+      </footer>
+
+      <script>
+        const API_URL = "https://altforgex-apialtforgex-api.x8toolsteam.workers.dev/alt-text";
+
+  const dropzone = document.getElementById("dropzone");
+  const fileInput = document.getElementById("fileInput");
+  const fileListEl = document.getElementById("fileList");
+  const generateBtn = document.getElementById("generateBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const statusEl = document.getElementById("status");
+  const contextInput = document.getElementById("contextInput");
+  const resultsPanel = document.getElementById("resultsPanel");
+  const resultsEl = document.getElementById("results");
+  const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+
+  let selectedFiles = [];
+  let lastResults = [];
+
+  dropzone.addEventListener("click", () => fileInput.click());
+  dropzone.addEventListener("dragover", (e) => { e.preventDefault(); dropzone.classList.add("dragover"); });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+  dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+    dropzone.classList.remove("dragover");
+    addFiles(Array.from(e.dataTransfer.files));
+});
+  fileInput.addEventListener("change", () => {
+        addFiles(Array.from(fileInput.files));
+    fileInput.value = "";
+});
+
+  function addFiles(files) {
+        const images = files.filter((f) => f.type.startsWith("image/"));
+    for (const f of images) {
+            if (selectedFiles.length >= 20) break;
+      selectedFiles.push(f);
+  }
+    renderFileList();
+}
+
+  function renderFileList() {
+        fileListEl.innerHTML = "";
+    selectedFiles.forEach((file, idx) => {
+            const div = document.createElement("div");
+            div.className = "thumb";
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "remove";
+      removeBtn.innerHTML = "✕";
+      removeBtn.onclick = () => {
+                selectedFiles.splice(idx, 1);
+        renderFileList();
+  };
+      div.appendChild(img);
+      div.appendChild(removeBtn);
+      fileListEl.appendChild(div);
+});
+    generateBtn.disabled = selectedFiles.length === 0;
+    clearBtn.disabled = selectedFiles.length === 0;
+}
+
+  clearBtn.addEventListener("click", () => {
+        selectedFiles = [];
+    renderFileList();
+    resultsPanel.style.display = "none";
+    statusEl.textContent = "";
+});
+
+  generateBtn.addEventListener("click", async () => {
+        if (!selectedFiles.length) return;
+    generateBtn.disabled = true;
+    clearBtn.disabled = true;
+    statusEl.textContent = `Generating ALT text for ${selectedFiles.length} image${selectedFiles.length > 1 ? "s" : ""}…`;
+    resultsPanel.style.display = "none";
+
+    const fd = new FormData();
+    selectedFiles.forEach((f) => fd.append("images[]", f));
+    const ctx = contextInput.value.trim();
+    if (ctx) fd.append("context", ctx);
+
+    try {
+      const resp = await fetch(API_URL, { method: "POST", body: fd });
+      if (!resp.ok) {
+        const errText = await resp.text();
+        throw new Error(errText || `Server error (${resp.status})`);
+      }
+      const data = await resp.json();
+      lastResults = data.results || [];
+      renderResults(lastResults);
+      statusEl.textContent = `Done — ${lastResults.length} image${lastResults.length > 1 ? "s" : ""} processed.`;
+    } catch (e) {
+      statusEl.textContent = "Error: " + (e.message || e);
+    } finally {
+            generateBtn.disabled = false;
+      clearBtn.disabled = false;
+}
+});
+
+  function renderResults(results) {
+        resultsEl.innerHTML = "";
+    results.forEach((r, i) => {
+            const row = document.createElement("div");
+            row.className = "result-row";
+
+      const img = document.createElement("img");
+      const matchingFile = selectedFiles.find((f) => f.name === r.filename);
+      if (matchingFile) img.src = URL.createObjectURL(matchingFile);
+
+      const textWrap = document.createElement("div");
+      textWrap.className = "result-text";
+      const fname = document.createElement("div");
+      fname.className = "fname";
+      fname.textContent = r.filename;
+      textWrap.appendChild(fname);
+
+      if (r.alt) {
+        const textarea = document.createElement("textarea");
+        textarea.className = "alt-value";
+        textarea.rows = 2;
+        textarea.value = r.alt;
+        textarea.id = `alt-${i}`;
+        textWrap.appendChild(textarea);
+  } else {
+        const errDiv = document.createElement("div");
+        errDiv.className = "alt-error";
+        errDiv.textContent = r.error || "Failed to generate ALT text.";
+        textWrap.appendChild(errDiv);
+}
+
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "copy-btn";
+      copyBtn.textContent = "Copy";
+      copyBtn.disabled = !r.alt;
+      copyBtn.onclick = () => {
+        const ta = document.getElementById(`alt-${i}`);
+        navigator.clipboard.writeText(ta.value).then(() => {
+          copyBtn.textContent = "Copied!";
+          copyBtn.classList.add("copied");
+          setTimeout(() => { copyBtn.textContent = "Copy"; copyBtn.classList.remove("copied"); }, 1500);
+});
+};
+
+      row.appendChild(img);
+      row.appendChild(textWrap);
+      row.appendChild(copyBtn);
+      resultsEl.appendChild(row);
+});
+    resultsPanel.style.display = "block";
+}
+
+  downloadCsvBtn.addEventListener("click", () => {
+    if (!lastResults.length) return;
+    const escapeCsv = (s) => `"${String(s || "").replace(/"/g, '""')}"`;
+    const rows = [["filename", "alt_text"]].concat(
+      lastResults.map((r) => [r.filename, r.alt || ""])
+    );
+    const csv = rows.map((r) => r.map(escapeCsv).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "altforgex-alt-text.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>
